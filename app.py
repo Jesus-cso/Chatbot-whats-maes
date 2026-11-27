@@ -1,7 +1,4 @@
 import os
-<<<<<<< HEAD
-import time
-=======
 import re
 import json
 import logging
@@ -10,7 +7,6 @@ from pathlib import Path
 import csv
 import time
 from functools import lru_cache
->>>>>>> avance-jesus
 import streamlit as st
 from pypdf import PdfReader
 from google import genai
@@ -18,24 +14,6 @@ from google.genai import types
 
 from dotenv import load_dotenv
 
-<<<<<<< HEAD
-load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=GEMINI_API_KEY)
-
-st.set_page_config(page_title="Asistente de Maestría")
-st.title("Asistente Virtual - Maestría en Gestión de Negocios")
-st.write("Consulta información oficial sobre convocatorias, plan de estudios, horarios y costos.")
-
-@st.cache_resource
-def cargar_contexto_documentos():
-    texto_total = ""
-    folder_path = "documentos"
-    if os.path.exists(folder_path):
-        for file in os.listdir(folder_path):
-            if file.endswith(".pdf"):
-                reader = PdfReader(os.path.join(folder_path, file))
-=======
 # Lee el .env que está junto a app.py (acepta UTF-8 con BOM, común en Windows)
 RUTA_ENV = Path(__file__).parent / ".env"
 load_dotenv(RUTA_ENV, encoding="utf-8-sig")
@@ -265,23 +243,10 @@ def cargar_contexto_documentos(rol):
             nombre = file.lower()
             if nombre.endswith(".pdf"):
                 reader = PdfReader(ruta)
->>>>>>> avance-jesus
                 for page in reader.pages:
                     texto = page.extract_text()
                     if texto:
                         texto_total += texto + "\n"
-<<<<<<< HEAD
-    
-    # Comprime espacios en blanco para reducir el uso de tokens
-    return " ".join(texto_total.split())
-
-contexto_pdf = cargar_contexto_documentos()
-
-
-system_instruction = f"""
-Eres un asistente virtual oficial para la Maestría en Gestión de Negocios.
-Tu objetivo es responder las dudas de los aspirantes de forma amable, clara y profesional.
-=======
             elif nombre.endswith((".txt", ".md")):
                 # Útil para datos que el PDF extrae mal (p. ej. calendarios) transcritos a texto
                 with open(ruta, encoding="utf-8-sig") as f:
@@ -302,29 +267,17 @@ Responde de forma amable, clara y profesional.
 
 PERFIL DEL USUARIO:
 {DESCRIPCION_ROL[rol]}
->>>>>>> avance-jesus
 
 REGLAS:
 1. Responde ÚNICAMENTE utilizando la información provista en el siguiente contexto.
 2. Si la respuesta NO está en el contexto, responde: "No dispongo de esa información. Te sugiero contactar directamente a la coordinación."
 3. NO inventes datos.
-<<<<<<< HEAD
-
-=======
 {reglas_extra}
->>>>>>> avance-jesus
 CONTEXTO OFICIAL DE LA MAESTRÍA:
 {contexto_pdf}
 """
 
 
-<<<<<<< HEAD
-def consultar_gemini_con_reintentos(prompt):
-    # Modelos candidatos en orden de prioridad
-    modelos = ["gemini-3.8-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
-    
-    for modelo in modelos:
-=======
 # ---------------------------------------------------------------------------
 # VERIFICACIÓN DE ESTUDIANTES
 # ---------------------------------------------------------------------------
@@ -613,7 +566,6 @@ def consultar_gemini_con_reintentos(contenido):
     """Regresa (texto, ok). `contenido` es el historial (lista de Content) con la pregunta al final."""
     hubo_config = False
     for modelo in MODELOS_GEMINI:
->>>>>>> avance-jesus
         for intento in range(3):  # Hasta 3 reintentos por modelo
             try:
                 response = client.models.generate_content(
@@ -622,23 +574,6 @@ def consultar_gemini_con_reintentos(contenido):
                         system_instruction=system_instruction,
                         temperature=0.1,
                     ),
-<<<<<<< HEAD
-                    contents=prompt
-                )
-                if response and response.text:
-                    return response.text
-            except Exception as e:
-                err_str = str(e)
-                # Si el servidor responde 503 (saturación), realiza una pausa de 2 segundos y reintenta
-                if "503" in err_str or "UNAVAILABLE" in err_str or "high demand" in err_str:
-                    time.sleep(2 * (intento + 1))
-                    continue
-                else:
-                    # Si el modelo no existe o falla por otro motivo, pasa al siguiente modelo
-                    break
-
-    return "⚠️ El servidor de Google está experimentando alta demanda en este momento. Por favor, reintenta tu pregunta en unos segundos."
-=======
                     contents=contenido,
                 )
                 if response and response.text:
@@ -656,7 +591,6 @@ def consultar_gemini_con_reintentos(contenido):
                     continue
                 break  # modelo inexistente u otro fallo: pasa al siguiente modelo
     return MSG_ALTA_DEMANDA, False
->>>>>>> avance-jesus
 
 
 if "messages" not in st.session_state:
@@ -667,10 +601,6 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-<<<<<<< HEAD
-# Entrada de pregunta del usuario
-if user_input := st.chat_input("Escribe tu duda sobre la maestría aquí..."):
-=======
 preguntas_hechas = sum(1 for m in st.session_state.messages if m["role"] == "user")
 if preguntas_hechas >= MAX_PREGUNTAS_SESION:
     st.info("Llegaste al límite de preguntas de esta sesión. Usa «Cambiar de perfil / Salir» para iniciar otra.")
@@ -698,20 +628,10 @@ user_input = pregunta_pendiente or entrada_escrita
 if not user_input:
     mostrar_preguntas_frecuentes()
 if user_input:
->>>>>>> avance-jesus
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
         st.markdown(user_input)
 
-<<<<<<< HEAD
-    # Generar respuesta gestionando los reintentos
-    with st.chat_message("assistant"):
-        with st.spinner("Consultando información oficial..."):
-            bot_response = consultar_gemini_con_reintentos(user_input)
-
-        st.markdown(bot_response)
-        st.session_state.messages.append({"role": "assistant", "content": bot_response})
-=======
     with st.chat_message("assistant"):
         with st.spinner("Consultando información oficial..."):
             historial = construir_historial(st.session_state.messages)
@@ -725,4 +645,3 @@ if user_input:
     # Las preguntas frecuentes vuelven a salir un momento después de la respuesta
     time.sleep(FAQ_RETRASO_SEGUNDOS)
     mostrar_preguntas_frecuentes()
->>>>>>> avance-jesus
